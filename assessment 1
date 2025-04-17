@@ -1,0 +1,47 @@
+#include <string>
+#include <cassert>
+#include <iostream>
+#include <algorithm>  // for std::reverse
+#include <cctype>     // for std::isalnum
+
+//Only the word sections made up of alphanumeric characters are reversed in the input string, 
+// while punctuation and spacing remain untouched.
+std::string reverse_words(const std::string &str) {
+    std::string result;
+    std::string word;  // buffer for collecting letters and or  digits
+    
+    for (char ch : str) {
+        if (std::isalnum(ch)) {
+            // Part of a word, collect the character.
+            word.push_back(ch);
+        } else {
+            //upon  encountering a non-word character, reverse the current word 
+            // and then append the separator character.
+            if (!word.empty()) {
+                std::reverse(word.begin(), word.end());
+                result.append(word);
+                word.clear();
+            }
+            result.push_back(ch);
+        }
+    }
+    // append any word leftover at the end of the string.
+    if (!word.empty()) {
+        std::reverse(word.begin(), word.end());
+        result.append(word);
+    }
+    return result;
+}
+
+int main() {
+    std::string test_str = "String; 2be reversed...";
+    // Expected output after reversing each word while keeping punctuation in place.
+    std::string expected = "gnirtS; eb2 desrever...";
+    std::string output = reverse_words(test_str);
+    
+    // Validate that the output matches the expected result.
+    assert(output == expected);
+    std::cout << "Output: " << output << std::endl;
+    
+    return 0;
+}
