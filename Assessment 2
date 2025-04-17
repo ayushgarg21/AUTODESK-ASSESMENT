@@ -1,0 +1,59 @@
+import os
+import re
+
+def update_file(filepath: str, pattern: str, replacement: str) -> None:
+    """
+    
+    read the file at 'filepath' and then replace text that matches the 'pattern' with 'replacement', following this write the updated content back to that file.
+    We are gonna use a temporary file during the process.
+    """
+    # Read the original lines 
+    with open(filepath, 'r') as fin:
+        lines = fin.readlines()
+
+    # process each line by applyng the substitution
+    updated_lines = [re.sub(pattern, replacement, line) for line in lines]
+
+    # write the new content to a temporary file.
+    tmp_filepath = filepath + ".tmp"
+    with open(tmp_filepath, 'w') as fout:
+        fout.writelines(updated_lines)
+
+    # replace the old file with the new temporary file.
+    os.remove(filepath)
+    os.rename(tmp_filepath, filepath)
+
+def update_SConstruct(build_num: str, source_path: str) -> None:
+    """
+    update the build number in the sconstruct file.
+    replaces the pattern 'point=[digits]' with the build number from environment.
+    """
+    sconstruct_path = os.path.join(source_path, "develop", "global", "src", "SConstruct")
+    # Reset file permissions to ensure we can write to it.
+    os.chmod(sconstruct_path, 0o755)
+    update_file(sconstruct_path, r"point\=[\d]+", f"point={build_num}")
+
+def update_VERSION(build_num: str, source_path: str) -> None:
+    """
+    update the build number in the VERSION file.
+    replaces the pattern 'ADLMSDK_VERSION_POINT=[digits]' with the build number.
+    """
+    version_path = os.path.join(source_path, "develop", "global", "src", "VERSION")
+    os.chmod(version_path, 0o755)
+    update_file(version_path, r"ADLMSDK_VERSION_POINT=[\d]+", f"ADLMSDK_VERSION_POINT={build_num}")
+
+def main() -> None:
+    # fetch  required environment variables.
+    try:
+        source_path = os.environ["SourcePath"]
+        build_num = os.environ["BuildNum"]
+    except KeyError as e:
+        print(f"Error: The environment variable {e} is not set.")
+        return
+
+    update_SConstruct(build_num, source_path)
+    update_VERSION(build_num, source_path)
+    print("Files have been updated successfully.")
+
+if __name__ == '__main__':
+    main()
